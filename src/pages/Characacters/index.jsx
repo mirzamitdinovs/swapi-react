@@ -1,21 +1,24 @@
 import Breadcrumb from 'components/Breadcrumb';
 import ItemCard from 'components/ItemCard';
 import Loader from 'components/Loader';
+import FavouritesContext from 'contexts/FavouritesContext';
 import { FETCHER } from 'helpers';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import useSWR from 'swr';
 const Characters = () => {
 	const [characters, setCharacters] = useState([]);
+	const { favourites, toggleFavourites, isInFavourites } =
+		useContext(FavouritesContext);
 	const { data } = useSWR(
 		'https://akabab.github.io/starwars-api/api/all.json',
 		FETCHER
 	);
 
 	useEffect(() => {
-		if (data) {
+		if (data && !characters.length) {
 			setCharacters(data);
 		}
-	}, []);
+	}, [data]);
 
 	const searchCharacters = (text) => {
 		const sortedData = data.filter((item) =>
@@ -28,7 +31,8 @@ const Characters = () => {
 		if (type === 'all') {
 			setCharacters(data);
 		} else {
-			setCharacters([]);
+			const favData = favourites['characters'];
+			setCharacters(favData.map((id) => data.find((item) => item.id == id)));
 		}
 	};
 
@@ -36,7 +40,7 @@ const Characters = () => {
 		console.log('page: ', page);
 	};
 
-	console.log('characters: ', characters);
+	console.log('data: ', data);
 
 	if (!data) return <Loader />;
 	return (
@@ -56,7 +60,8 @@ const Characters = () => {
 						title={item.name}
 						link={`/characters/${item.id}`}
 						image={item.image}
-						toggleFav={() => console.log('hello')}
+						selected={isInFavourites('characters', item.id)}
+						toggleFav={() => toggleFavourites('characters', item.id)}
 					/>
 				))}
 			</div>
